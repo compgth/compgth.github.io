@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Meine persönliche Startseite</title>
+    <style>
+        :root {
+            --bg: #fff;
+            --fg: #222;
+            --accent: #0057b8;
+            --card-bg: #f4f4f4;
+            --border: #ddd;
+        }
+        html {
+            box-sizing: border-box;
+        }
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .osm-map {
+            width: 100%;
+            height: 250px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        header {
+            background: var(--accent);
+            color: #fff;
+            padding: 2rem 1rem 1rem 1rem;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2.2rem;
+            letter-spacing: 0.02em;
+        }
+        main {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+        section {
+            width: 100%;
+        }
+        .intro {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: center;
+        }
+        .intro figure {
+            margin: 0;
+            flex: 0 0 140px;
+        }
+        .intro img {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            background: #eee;
+            display: block;
+        }
+        .intro-text {
+            flex: 1 1 200px;
+            min-width: 200px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.7em 1em;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.2s;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: inherit;
+        }
+        .card:hover, .card:focus {
+            box-shadow: 0 4px 16px rgba(0,87,184,0.10);
+            border-color: var(--accent);
+            outline: none;
+        }
+        .card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #ddd;
+            display: block;
+        }
+        .card-content {
+            padding: 1em;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+        }
+        .card-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 0;
+        }
+        @media (max-width: 600px) {
+            .intro {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .intro figure {
+                margin-bottom: 1rem;
+            }
+            main {
+                margin: 1rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Heiko Begander</h1>
+        <p>Willkommen auf meiner persönlichen Startseite.</p>
+    </header>
+    <main>
+        <section class="intro">
+            <figure>
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Porträt eines Studenten">
+            </figure>
+            <div class="intro-text">
+                <p>Hallo! Ich bin Heiko Begander, Geoinformatiker mit Leidenschaft für Karten, Daten und Technologie. Auf dieser Seite findest du einen kurzen Überblick über meinen Werdegang und meine Interessen.</p>
+                <p>Ich arbeite gerne an innovativen Projekten, die Geodaten und moderne Webtechnologien verbinden.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Stationen</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Jahr</th>
+                        <th>Station</th>
+                        <th>Ort</th>
+                        <th>Stichwort</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2015</td>
+                        <td>Abitur</td>
+                        <td>Berlin</td>
+                        <td>Schule</td>
+                    </tr>
+                    <tr>
+                        <td>2016–2019</td>
+                        <td>Bachelor Geoinformatik</td>
+                        <td>Dresden</td>
+                        <td>Studium</td>
+                    </tr>
+                    <tr>
+                        <td>2019–2021</td>
+                        <td>Master Geoinformatik</td>
+                        <td>München</td>
+                        <td>Vertiefung</td>
+                    </tr>
+                    <tr>
+                        <td>2021</td>
+                        <td>Praktikum GIS</td>
+                        <td>Leipzig</td>
+                        <td>Praxis</td>
+                    </tr>
+                    <tr>
+                        <td>2022</td>
+                        <td>Werkstudent Webmapping</td>
+                        <td>Hamburg</td>
+                        <td>Berufseinstieg</td>
+                    </tr>
+                    <tr>
+                        <td>2023–heute</td>
+                        <td>Geoinformatiker</td>
+                        <td>Berlin</td>
+                        <td>Beruf</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Meine Karten</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: nowrap;">
+                <div id="map1" class="osm-map" style="flex:1 1 0; min-width:220px; max-width:100%;"></div>
+                <div id="map2" class="osm-map" style="flex:1 1 0; min-width:220px; max-width:100%;"></div>
+                <div id="map3" class="osm-map" style="flex:1 1 0; min-width:220px; max-width:100%;"></div>
+            </div>
+        </section>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var center = [38.89511, -77.03637]; // Washington DC
+                var zoom = 12;
+                var maps = [
+                    L.map('map1').setView(center, zoom),
+                    L.map('map2').setView(center, zoom),
+                    L.map('map3').setView(center, zoom)
+                ];
+                maps.forEach(function(map) {
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
+                    }).addTo(map);
+                });
+            });
+        </script>
+    </main>
+</body>
+</html>
