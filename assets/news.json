@@ -1,0 +1,36 @@
+{
+  "news": [
+    {
+      "id": "news1",
+      "title": "Neue Veröffentlichung",
+      "date": "2025-10-20",
+      "image": "https://picsum.photos/seed/news1/800/400",
+      "summary": "Veröffentlichung eines Artikels zur Webkartographie mit interaktiven Karten.",
+      "link": "#"
+    },
+    {
+      "id": "news2",
+      "title": "Projektstart",
+      "date": "2025-09-05",
+      "image": "https://picsum.photos/seed/news2/800/400",
+      "summary": "Beginn eines Projekts zur Integration von Fernerkundungsdaten in Webanwendungen.",
+      "link": "#"
+    },
+    {
+      "id": "news3",
+      "title": "Seepferdchen-Schutzinitiative gestartet",
+      "date": "2025-08-10",
+      "image": "https://picsum.photos/seed/seahorse1/800/400",
+      "summary": "Eine lokale Initiative startet Maßnahmen zum Schutz der Seepferdchen in Küstenlebensräumen und setzt auf Bürgerbeteiligung.",
+      "link": "#"
+    },
+    {
+      "id": "news4",
+      "title": "Neue Studie zu Seepferdchen-Populationen",
+      "date": "2025-07-15",
+      "image": "https://picsum.photos/seed/seahorse2/800/400",
+      "summary": "Wissenschaftler veröffentlichen eine Studie zur Entwicklung von Seepferdchen-Populationen und identifizieren wichtige Schutzgebiete.",
+      "link": "#"
+    }
+  ]
+}

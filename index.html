@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Meine persönliche Startseite</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
     <style>
         :root {
             --bg: #fff;
@@ -11,13 +15,21 @@
             --accent: #0057b8;
             --card-bg: #f4f4f4;
             --border: #ddd;
+            --muted: #666;
         }
-        html {
-            box-sizing: border-box;
+        /* Dark theme variables */
+        body.dark {
+            --bg: #0f1720;
+            --fg: #e6eef6;
+            --accent: #3aa0ff;
+            --card-bg: #0b1220;
+            --border: #1f2a37;
+            --muted: #9fb7d9;
         }
-        *, *::before, *::after {
-            box-sizing: inherit;
-        }
+
+        html { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: inherit; }
+
         body {
             margin: 0;
             padding: 0;
@@ -27,58 +39,103 @@
             line-height: 1.6;
             min-height: 100vh;
         }
+
         .osm-map {
             width: 100%;
             height: 250px;
             border: 1px solid var(--border);
             border-radius: 8px;
             margin-bottom: 0.5rem;
+            background: linear-gradient(180deg, rgba(0,0,0,0.02), transparent);
         }
+
         header {
             background: var(--accent);
             color: #fff;
-            padding: 2rem 1rem 1rem 1rem;
+            padding: 1.5rem 1rem 1rem 1rem;
             text-align: center;
+            position: relative;
         }
-        header h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 2.2rem;
-            letter-spacing: 0.02em;
+        header h1 { margin: 0 0 0.25rem 0; font-size: 2.2rem; letter-spacing: 0.02em; }
+        header p { margin: 0; opacity: 0.95; }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: white;
+            padding: 0.35rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
+        body.dark .theme-toggle {
+            background: rgba(0,0,0,0.24);
+            border-color: rgba(255,255,255,0.06);
+            color: var(--fg);
+        }
+
         main {
-            max-width: 800px;
-            margin: 2rem auto;
+            max-width: 1000px;
+            margin: 1.5rem auto;
             padding: 0 1rem;
             display: flex;
             flex-direction: column;
-            gap: 2.5rem;
+            gap: 1.5rem;
         }
-        section {
-            width: 100%;
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
+        .tabs button {
+            background: var(--card-bg);
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tabs button[aria-pressed="true"], .tabs button:focus {
+            background: linear-gradient(180deg, rgba(0,0,0,0.04), transparent);
+            border-color: var(--accent);
+            color: var(--accent);
+            outline: none;
+            box-shadow: 0 4px 12px rgba(0,87,184,0.06);
+        }
+        body.dark .tabs button {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--muted);
+        }
+        body.dark .tabs button[aria-pressed="true"] {
+            color: var(--accent);
+            background: rgba(58,160,255,0.06);
+        }
+
+        section { width: 100%; }
+
         .intro {
             display: flex;
             flex-wrap: wrap;
-            gap: 2rem;
+            gap: 1.25rem;
             align-items: center;
         }
-        .intro figure {
-            margin: 0;
-            flex: 0 0 140px;
-        }
+        .intro figure { margin: 0; flex: 0 0 140px; }
         .intro img {
-            width: 140px;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 3px solid var(--accent);
-            background: #eee;
-            display: block;
+            width: 140px; height: 140px; object-fit: cover;
+            border-radius: 50%; border: 3px solid var(--accent);
+            background: #eee; display: block;
         }
-        .intro-text {
-            flex: 1 1 200px;
-            min-width: 200px;
-        }
+        .intro-text { flex: 1 1 200px; min-width: 200px; }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -91,21 +148,22 @@
             padding: 0.7em 1em;
             text-align: left;
             border-bottom: 1px solid var(--border);
+            color: var(--fg);
         }
         th {
             background: var(--accent);
             color: #fff;
             font-weight: 600;
         }
-        tr:last-child td {
-            border-bottom: none;
-        }
+        tr:last-child td { border-bottom: none; }
+
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1.5rem;
             margin-top: 1rem;
         }
+
         .card {
             background: var(--card-bg);
             border-radius: 8px;
@@ -123,37 +181,23 @@
             border-color: var(--accent);
             outline: none;
         }
-        .card img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            background: #ddd;
-            display: block;
-        }
-        .card-content {
-            padding: 1em;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5em;
-        }
-        .card-title {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: var(--accent);
-            margin: 0;
+
+        .card img { width: 100%; height: 120px; object-fit: cover; background: #ddd; display: block; }
+        .card-content { padding: 1em; flex: 1; display: flex; flex-direction: column; gap: 0.5em; }
+        .card-title { font-size: 1.1em; font-weight: 600; color: var(--accent); margin: 0; }
+
+        /* Tab panels */
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        @media (max-width: 900px) {
+            .osm-map { height: 220px; }
         }
         @media (max-width: 600px) {
-            .intro {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .intro figure {
-                margin-bottom: 1rem;
-            }
-            main {
-                margin: 1rem 0;
-            }
+            .intro { flex-direction: column; align-items: flex-start; }
+            .intro figure { margin-bottom: 1rem; }
+            main { margin: 1rem 0; }
+            .tabs { justify-content: space-between; }
         }
     </style>
 </head>
@@ -161,19 +205,30 @@
     <header>
         <h1>Heiko Begander</h1>
         <p>Willkommen auf meiner persönlichen Startseite.</p>
+        <button id="theme-toggle" class="theme-toggle" aria-pressed="false" title="Toggle Dark Mode">Dark</button>
     </header>
+
     <main>
-        <section class="intro">
-            <figure>
-                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Porträt eines Studenten">
-            </figure>
-            <div class="intro-text">
-                <p>Hallo! Ich bin Heiko Begander, Geoinformatiker mit Leidenschaft für Karten, Daten und Technologie. Auf dieser Seite findest du einen kurzen Überblick über meinen Werdegang und meine Interessen.</p>
-                <p>Ich arbeite gerne an innovativen Projekten, die Geodaten und moderne Webtechnologien verbinden.</p>
+        <nav class="tabs" role="tablist" aria-label="Hauptnavigation">
+            <button role="tab" aria-selected="true" aria-pressed="true" data-target="about">Über mich</button>
+            <button role="tab" aria-selected="false" aria-pressed="false" data-target="stationen">Stationen</button>
+            <button role="tab" aria-selected="false" aria-pressed="false" data-target="karten">Karten</button>
+            <button role="tab" aria-selected="false" aria-pressed="false" data-target="news">News</button>
+        </nav>
+
+        <section id="about" class="tab-panel active" role="tabpanel" aria-hidden="false">
+            <div class="intro">
+                <figure>
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Porträt eines Studenten">
+                </figure>
+                <div class="intro-text">
+                    <p>Hallo! Ich bin Heiko Begander, Geoinformatiker mit Leidenschaft für Karten, Daten und Technologie. Auf dieser Seite findest du einen kurzen Überblick über meinen Werdegang und meine Interessen.</p>
+                    <p>Ich arbeite gerne an innovativen Projekten, die Geodaten und moderne Webtechnologien verbinden.</p>
+                </div>
             </div>
         </section>
 
-        <section>
+        <section id="stationen" class="tab-panel" role="tabpanel" aria-hidden="true">
             <h2>Stationen</h2>
             <table>
                 <thead>
@@ -185,47 +240,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>2015</td>
-                        <td>Abitur</td>
-                        <td>Berlin</td>
-                        <td>Schule</td>
-                    </tr>
-                    <tr>
-                        <td>2016–2019</td>
-                        <td>Bachelor Geoinformatik</td>
-                        <td>Dresden</td>
-                        <td>Studium</td>
-                    </tr>
-                    <tr>
-                        <td>2019–2021</td>
-                        <td>Master Geoinformatik</td>
-                        <td>München</td>
-                        <td>Vertiefung</td>
-                    </tr>
-                    <tr>
-                        <td>2021</td>
-                        <td>Praktikum GIS</td>
-                        <td>Leipzig</td>
-                        <td>Praxis</td>
-                    </tr>
-                    <tr>
-                        <td>2022</td>
-                        <td>Werkstudent Webmapping</td>
-                        <td>Hamburg</td>
-                        <td>Berufseinstieg</td>
-                    </tr>
-                    <tr>
-                        <td>2023–heute</td>
-                        <td>Geoinformatiker</td>
-                        <td>Berlin</td>
-                        <td>Beruf</td>
-                    </tr>
+                    <tr><td>2015</td><td>Abitur</td><td>Berlin</td><td>Schule</td></tr>
+                    <tr><td>2016–2019</td><td>Bachelor Geoinformatik</td><td>Dresden</td><td>Studium</td></tr>
+                    <tr><td>2019–2021</td><td>Master Geoinformatik</td><td>München</td><td>Vertiefung</td></tr>
+                    <tr><td>2021</td><td>Praktikum GIS</td><td>Leipzig</td><td>Praxis</td></tr>
+                    <tr><td>2022</td><td>Werkstudent Webmapping</td><td>Hamburg</td><td>Berufseinstieg</td></tr>
+                    <tr><td>2023–heute</td><td>Geoinformatiker</td><td>Berlin</td><td>Beruf</td></tr>
                 </tbody>
             </table>
         </section>
 
-        <section>
+        <section id="karten" class="tab-panel" role="tabpanel" aria-hidden="true">
             <h2>Meine Karten</h2>
             <div style="display: flex; gap: 1rem; flex-wrap: nowrap;">
                 <div id="map1" class="osm-map" style="flex:1 1 0; min-width:220px; max-width:100%;"></div>
@@ -233,24 +258,275 @@
                 <div id="map3" class="osm-map" style="flex:1 1 0; min-width:220px; max-width:100%;"></div>
             </div>
         </section>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
+
+        <section id="news" class="tab-panel" role="tabpanel" aria-hidden="true">
+            <h2>News</h2>
+            <div id="news-gallery" class="gallery" aria-live="polite">
+                <!-- News items will be loaded here from assets/news.json -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // Theme toggle with persistence and theme change event
+        (function() {
+            var btn = document.getElementById('theme-toggle');
+            var stored = localStorage.getItem('theme'); // 'dark' or 'light'
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark');
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.textContent = 'Light';
+                } else {
+                    document.body.classList.remove('dark');
+                    btn.setAttribute('aria-pressed', 'false');
+                    btn.textContent = 'Dark';
+                }
+                // notify other parts (maps) about theme change
+                window.dispatchEvent(new CustomEvent('themeChange', { detail: theme }));
+            }
+
+            // Initial theme: stored > prefers-color-scheme > light
+            if (stored) {
+                applyTheme(stored);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                applyTheme('dark');
+            } else {
+                applyTheme('light');
+            }
+
+            btn.addEventListener('click', function () {
+                var isDark = document.body.classList.toggle('dark');
+                var theme = isDark ? 'dark' : 'light';
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+            });
+        })();
+
+        // Tab behavior and map initialization with map dark/light tile switching
+        (function() {
+            var tabs = document.querySelectorAll('.tabs button');
+            var panels = document.querySelectorAll('.tab-panel');
+            var maps = null;
+            var tileLayers = [];
+            var mapsCreated = false;
+
+            var lightTiles = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            var lightAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+            var darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
+            var darkAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & <a href="https://carto.com/attributions">CartoDB</a>';
+
+            function setActiveTab(targetId) {
+                tabs.forEach(function(t) {
+                    var is = t.dataset.target === targetId;
+                    t.setAttribute('aria-selected', is ? 'true' : 'false');
+                    t.setAttribute('aria-pressed', is ? 'true' : 'false');
+                });
+                panels.forEach(function(p) {
+                    var is = p.id === targetId;
+                    p.classList.toggle('active', is);
+                    p.setAttribute('aria-hidden', is ? 'false' : 'true');
+                });
+
+                if (targetId === 'karten') {
+                    showMaps();
+                }
+
+                if (targetId === 'news') {
+                    // lazy load news when the tab is first opened
+                    if (!window._newsLoaded) {
+                        loadNews();
+                        window._newsLoaded = true;
+                    }
+                }
+            }
+
+            tabs.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    setActiveTab(btn.dataset.target);
+                });
+            });
+
+            // Map creation on demand (to avoid leaflet issues when hidden)
+            function showMaps() {
+                if (!mapsCreated) {
+                    createMaps();
+                    mapsCreated = true;
+                } else {
+                    // If already created, notify Leaflet to recalc sizes
+                    setTimeout(function() {
+                        maps.forEach(function(m) { m.invalidateSize(); });
+                    }, 50);
+                }
+            }
+
+            function createMaps() {
                 var center = [38.89511, -77.03637]; // Washington DC
                 var zoom = 12;
-                var maps = [
+                maps = [
                     L.map('map1').setView(center, zoom),
                     L.map('map2').setView(center, zoom),
                     L.map('map3').setView(center, zoom)
                 ];
-                maps.forEach(function(map) {
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-                    }).addTo(map);
+                // add appropriate tile layer based on current theme
+                var currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+                maps.forEach(function(map, idx) {
+                    var url = (currentTheme === 'dark') ? darkTiles : lightTiles;
+                    var attr = (currentTheme === 'dark') ? darkAttribution : lightAttribution;
+                    var layer = L.tileLayer(url, { attribution: attr });
+                    layer.addTo(map);
+                    tileLayers[idx] = layer;
                 });
+                // Ensure proper sizing after render
+                setTimeout(function() {
+                    maps.forEach(function(m) { m.invalidateSize(); });
+                }, 100);
+            }
+
+            // Replace tile layers when theme changes
+            function updateMapTiles(theme) {
+                if (!mapsCreated || !maps) return;
+                var url = (theme === 'dark') ? darkTiles : lightTiles;
+                var attr = (theme === 'dark') ? darkAttribution : lightAttribution;
+                maps.forEach(function(map, idx) {
+                    // remove previous tile layer if present
+                    if (tileLayers[idx]) {
+                        try { map.removeLayer(tileLayers[idx]); } catch (e) { /* ignore */ }
+                    }
+                    var newLayer = L.tileLayer(url, { attribution: attr });
+                    newLayer.addTo(map);
+                    tileLayers[idx] = newLayer;
+                });
+                // give Leaflet a moment to re-render
+                setTimeout(function() {
+                    maps.forEach(function(m) { m.invalidateSize(); });
+                }, 80);
+            }
+
+            // Listen for theme changes
+            window.addEventListener('themeChange', function(e) {
+                updateMapTiles(e.detail);
             });
-        </script>
-    </main>
+
+            // Ensure initial state (default tab is the first)
+            var initial = document.querySelector('.tabs button[aria-selected="true"]') || tabs[0];
+            if (initial) setActiveTab(initial.dataset.target);
+
+            // --- News loader -------------------------------------------------
+            function createNewsCard(item) {
+                var article = document.createElement('article');
+                article.className = 'card';
+
+                var img = document.createElement('img');
+                img.src = item.image || '';
+                img.alt = item.title || 'News Bild';
+                article.appendChild(img);
+
+                var content = document.createElement('div');
+                content.className = 'card-content';
+
+                var h3 = document.createElement('h3');
+                h3.className = 'card-title';
+                h3.textContent = item.title || '';
+
+                var p = document.createElement('p');
+                p.textContent = item.summary || '';
+
+                var small = document.createElement('small');
+                small.style.color = getComputedStyle(document.documentElement).getPropertyValue('--muted') || 'gray';
+                small.textContent = formatDate(item.date || '');
+
+                content.appendChild(h3);
+                content.appendChild(p);
+                content.appendChild(small);
+                article.appendChild(content);
+
+                // optional link wrapper
+                if (item.link) {
+                    var a = document.createElement('a');
+                    a.href = item.link;
+                    a.className = 'card-link';
+                    a.style.textDecoration = 'none';
+                    a.style.color = 'inherit';
+                    a.setAttribute('aria-label', item.title || 'News');
+
+                    // move article into link
+                    a.appendChild(article.cloneNode(true));
+                    return a;
+                }
+
+                return article;
+            }
+
+            function formatDate(d) {
+                if (!d) return '';
+                // try ISO YYYY-MM-DD
+                var iso = d.match(/^\d{4}-\d{2}-\d{2}$/);
+                if (iso) {
+                    var dt = new Date(d + 'T00:00:00');
+                    return dt.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
+                }
+                return d;
+            }
+
+            function loadNews() {
+                var container = document.getElementById('news-gallery');
+                if (!container) return;
+                // show a simple loading state
+                container.innerHTML = '<p>Lade News…</p>';
+
+                // If page is opened via file:// the browser will block fetch requests to local files.
+                if (window.location.protocol === 'file:') {
+                    container.innerHTML = '<p>Die News können lokal (file://) nicht geladen werden. Bitte starte einen lokalen Webserver oder öffne die Seite über http(s).</p>';
+                    return;
+                }
+
+                // Try a few possible relative URLs in case the page is served from a subpath.
+                var candidates = [
+                    'assets/news.json',
+                    './assets/news.json',
+                    window.location.pathname.replace(/\/[^\/]*$/, '') + '/assets/news.json',
+                    window.location.origin + '/assets/news.json'
+                ].filter(Boolean);
+
+                var tried = 0;
+                function tryFetch(urlIndex) {
+                    if (urlIndex >= candidates.length) {
+                        container.innerHTML = '<p>Fehler beim Laden der News.</p>';
+                        return;
+                    }
+                    var url = candidates[urlIndex];
+                    // attempt fetch without cache
+                    fetch(url, { cache: 'no-store' }).then(function(resp) {
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status + ' for ' + url);
+                        return resp.json();
+                    }).then(function(data) {
+                        var items = data && data.news ? data.news : [];
+                        container.innerHTML = '';
+                        if (!items.length) {
+                            container.innerHTML = '<p>Keine News vorhanden.</p>';
+                            return;
+                        }
+                        items.forEach(function(it) {
+                            var node = createNewsCard(it);
+                            container.appendChild(node);
+                        });
+                    }).catch(function(err) {
+                        // try next candidate
+                        // eslint-disable-next-line no-console
+                        console.warn('news load failed for', url, err);
+                        tryFetch(urlIndex + 1);
+                    });
+                }
+
+                tryFetch(0);
+            }
+
+        })();
+    </script>
 </body>
 </html>
