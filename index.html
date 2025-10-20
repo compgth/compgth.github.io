@@ -231,9 +231,9 @@
         }
         .contact-fab svg { width: 20px; height: 20px; display: block; fill: var(--accent); }
 
-        /* Snake game styles */
+        /* Game styles (Pong) */
         .game-wrap { display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; }
-        #snake-canvas { background: var(--card-bg); border: 1px solid var(--border); border-radius:8px; width: 100%; max-width: 480px; height: auto; display:block; }
+        #game-canvas { background: var(--card-bg); border: 1px solid var(--border); border-radius:8px; width: 100%; max-width: 640px; height: auto; display:block; }
         .game-controls { display:flex; gap:0.5rem; align-items:center; flex-direction:column; }
         .game-controls button { padding:0.4rem 0.6rem; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); cursor:pointer; }
         .score { font-weight:600; color:var(--fg); }
@@ -306,17 +306,17 @@
         </section>
 
         <section id="game" class="tab-panel" role="tabpanel" aria-hidden="true">
-            <h2>Spiel: Snake</h2>
+            <h2>Spiel: Pong</h2>
             <div class="game-wrap">
-                <canvas id="snake-canvas" width="400" height="400" aria-label="Snake Spiel" tabindex="0"></canvas>
+                <canvas id="game-canvas" width="600" height="400" aria-label="Pong Spiel" tabindex="0"></canvas>
                 <div class="game-controls" aria-hidden="false">
-                    <div class="score">Punkte: <span id="snake-score">0</span></div>
+                    <div class="score">Spielstand: <span id="game-score">0 : 0</span></div>
                     <div>
-                        <button id="snake-start" aria-label="Spiel starten">Start</button>
-                        <button id="snake-pause" aria-label="Spiel pausieren">Pause</button>
-                        <button id="snake-reset" aria-label="Spiel zurücksetzen">Reset</button>
+                        <button id="game-start" aria-label="Spiel starten">Start</button>
+                        <button id="game-pause" aria-label="Spiel pausieren">Pause</button>
+                        <button id="game-reset" aria-label="Spiel zurücksetzen">Reset</button>
                     </div>
-                    <small style="color:var(--muted)">Steuerung: Pfeiltasten / W A S D</small>
+                    <small style="color:var(--muted)">Steuerung: Spieler links: W / S oder Pfeile</small>
                 </div>
             </div>
         </section>
@@ -489,146 +489,123 @@
             var initial = document.querySelector('.tabs button[aria-selected="true"]') || tabs[0];
             if (initial) setActiveTab(initial.dataset.target);
 
-            // --- Snake game -------------------------------------------------
-            var _snakeCreated = false;
-            var _snake = null;
+            // --- Pong game -------------------------------------------------
+            var _gameCreated = false;
+            var _game = null;
 
-            function ensureSnake() {
-                if (_snakeCreated) return;
-                _snakeCreated = true;
+            function ensureGame() {
+                if (_gameCreated) return;
+                _gameCreated = true;
 
-                var canvas = document.getElementById('snake-canvas');
+                var canvas = document.getElementById('game-canvas');
                 var ctx = canvas.getContext('2d');
-                var scoreEl = document.getElementById('snake-score');
-                var startBtn = document.getElementById('snake-start');
-                var pauseBtn = document.getElementById('snake-pause');
-                var resetBtn = document.getElementById('snake-reset');
+                var scoreEl = document.getElementById('game-score');
+                var startBtn = document.getElementById('game-start');
+                var pauseBtn = document.getElementById('game-pause');
+                var resetBtn = document.getElementById('game-reset');
 
-                var grid = 20; // cell size
-                var cols = Math.floor(canvas.width / grid);
-                var rows = Math.floor(canvas.height / grid);
-
-                var game = {
-                    snake: [{x: Math.floor(cols/2), y: Math.floor(rows/2)}],
-                    dir: {x:1,y:0},
-                    food: null,
-                    running: false,
-                    speed: 8, // frames per second
-                    tickId: null,
-                    score: 0
-                };
-
-                function placeFood() {
-                    var valid = false;
-                    while (!valid) {
-                        var fx = Math.floor(Math.random()*cols);
-                        var fy = Math.floor(Math.random()*rows);
-                        valid = !game.snake.some(function(s){ return s.x===fx && s.y===fy; });
-                        if (valid) game.food = {x:fx,y:fy};
-                    }
-                }
+                var w = canvas.width, h = canvas.height;
+                var paddleH = 80, paddleW = 10;
+                var left = { x: 10, y: (h - paddleH)/2 };
+                var right = { x: w - 10 - paddleW, y: (h - paddleH)/2 };
+                var ball = { x: w/2, y: h/2, vx: 4, vy: 3, r: 6 };
+                var keys = {};
+                var score = { left: 0, right: 0 };
+                var running = false;
+                var rafId = null;
 
                 function draw() {
-                    ctx.clearRect(0,0,canvas.width,canvas.height);
                     // background
-                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--card-bg') || '#f4f4f4';
-                    ctx.fillRect(0,0,canvas.width,canvas.height);
-                    // food
-                    if (game.food) {
-                        ctx.fillStyle = '#e44';
-                        ctx.fillRect(game.food.x*grid, game.food.y*grid, grid-1, grid-1);
-                    }
-                    // snake
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg') || '#fff';
+                    ctx.fillRect(0,0,w,h);
+                    // center line
+                    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border') || '#ddd';
+                    ctx.setLineDash([8,8]);
+                    ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke(); ctx.setLineDash([]);
+                    // paddles
                     ctx.fillStyle = getComputedStyle(document.body).classList.contains('dark') ? '#58a6ff' : '#0057b8';
-                    game.snake.forEach(function(s, idx){
-                        ctx.fillRect(s.x*grid, s.y*grid, grid-1, grid-1);
-                    });
+                    ctx.fillRect(left.x, left.y, paddleW, paddleH);
+                    ctx.fillRect(right.x, right.y, paddleW, paddleH);
+                    // ball
+                    ctx.beginPath(); ctx.fillStyle = '#e44'; ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
                 }
 
                 function step() {
-                    var head = { x: game.snake[0].x + game.dir.x, y: game.snake[0].y + game.dir.y };
-                    // wrap around
-                    head.x = (head.x + cols) % cols;
-                    head.y = (head.y + rows) % rows;
-                    // collision with self
-                    if (game.snake.some(function(s){ return s.x===head.x && s.y===head.y; })) {
-                        stop();
-                        return;
+                    // player input (left paddle)
+                    if (keys['ArrowUp'] || keys['w'] || keys['W']) left.y -= 6;
+                    if (keys['ArrowDown'] || keys['s'] || keys['S']) left.y += 6;
+                    left.y = Math.max(0, Math.min(h - paddleH, left.y));
+
+                    // simple AI for right paddle
+                    var target = ball.y - paddleH/2;
+                    right.y += (target - right.y) * 0.08;
+                    right.y = Math.max(0, Math.min(h - paddleH, right.y));
+
+                    // move ball
+                    ball.x += ball.vx; ball.y += ball.vy;
+                    // top/bottom
+                    if (ball.y - ball.r < 0 || ball.y + ball.r > h) ball.vy *= -1;
+
+                    // paddle collisions
+                    if (ball.x - ball.r < left.x + paddleW && ball.y > left.y && ball.y < left.y + paddleH) {
+                        ball.vx = Math.abs(ball.vx);
+                        // add some spin
+                        var diff = (ball.y - (left.y + paddleH/2)) / (paddleH/2);
+                        ball.vy = 4 * diff;
                     }
-                    game.snake.unshift(head);
-                    // eat food
-                    if (game.food && head.x===game.food.x && head.y===game.food.y) {
-                        game.score += 1;
-                        scoreEl.textContent = game.score;
-                        placeFood();
-                    } else {
-                        game.snake.pop();
+                    if (ball.x + ball.r > right.x && ball.y > right.y && ball.y < right.y + paddleH) {
+                        ball.vx = -Math.abs(ball.vx);
+                        var diff = (ball.y - (right.y + paddleH/2)) / (paddleH/2);
+                        ball.vy = 4 * diff;
                     }
+
+                    // score
+                    if (ball.x < 0) { score.right += 1; resetBall(-1); }
+                    if (ball.x > w) { score.left += 1; resetBall(1); }
+
                     draw();
+                    scoreEl.textContent = score.left + ' : ' + score.right;
                 }
 
-                function start() {
-                    if (game.running) return;
-                    game.running = true;
-                    var interval = 1000 / game.speed;
-                    game.tickId = setInterval(step, interval);
-                }
-                function stop() {
-                    game.running = false;
-                    if (game.tickId) { clearInterval(game.tickId); game.tickId = null; }
-                }
-                function reset() {
-                    stop();
-                    game.snake = [{x: Math.floor(cols/2), y: Math.floor(rows/2)}];
-                    game.dir = {x:1,y:0};
-                    game.score = 0;
-                    scoreEl.textContent = '0';
-                    placeFood();
-                    draw();
+                function resetBall(dir) {
+                    ball.x = w/2; ball.y = h/2; ball.vx = 4 * (dir|| (Math.random() > 0.5 ? 1 : -1)); ball.vy = (Math.random()*4 - 2);
                 }
 
-                function setDir(dx,dy) {
-                    // prevent reverse
-                    if (game.snake.length>1 && game.dir.x === -dx && game.dir.y === -dy) return;
-                    game.dir.x = dx; game.dir.y = dy;
+                function loop() {
+                    step();
+                    rafId = requestAnimationFrame(loop);
                 }
 
-                // keyboard
-                function onKey(e) {
-                    var key = e.key;
-                    if (key === 'ArrowUp' || key === 'w' || key === 'W') setDir(0,-1);
-                    if (key === 'ArrowDown' || key === 's' || key === 'S') setDir(0,1);
-                    if (key === 'ArrowLeft' || key === 'a' || key === 'A') setDir(-1,0);
-                    if (key === 'ArrowRight' || key === 'd' || key === 'D') setDir(1,0);
-                    if (key === ' ' ) { if (game.running) stop(); else start(); }
-                }
+                function start() { if (running) return; running = true; rafId = requestAnimationFrame(loop); }
+                function pause() { if (!running) return; running = false; if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+                function reset() { pause(); score.left = 0; score.right = 0; left.y = (h - paddleH)/2; right.y = (h - paddleH)/2; resetBall(); draw(); scoreEl.textContent = '0 : 0'; }
+
+                function onKeyDown(e) { keys[e.key] = true; if (e.key === ' ') { if (running) pause(); else start(); } }
+                function onKeyUp(e) { keys[e.key] = false; }
 
                 // attach events
                 startBtn.addEventListener('click', start);
-                pauseBtn.addEventListener('click', function(){ if (game.running) stop(); else start(); });
+                pauseBtn.addEventListener('click', function(){ if (running) pause(); else start(); });
                 resetBtn.addEventListener('click', reset);
-                window.addEventListener('keydown', onKey);
+                window.addEventListener('keydown', onKeyDown);
+                window.addEventListener('keyup', onKeyUp);
 
                 // init
-                placeFood(); draw();
+                resetBall(); draw();
 
-                _snake = { start: start, pause: stop, reset: reset, isRunning: function(){ return game.running; } };
+                _game = { start: start, pause: pause, reset: reset, isRunning: function(){ return running; } };
             }
 
             function showGame() {
-                ensureSnake();
-                // focus canvas for keyboard input
-                var c = document.getElementById('snake-canvas'); if (c) c.focus();
+                ensureGame();
+                var c = document.getElementById('game-canvas'); if (c) c.focus();
             }
 
-            // integrate with tab activation
+            // integrate with tab activation (override existing setActiveTab)
             var originalSetActive = setActiveTab;
             setActiveTab = function(targetId) {
-                // call original behaviour
                 originalSetActive(targetId);
-                if (targetId === 'game') {
-                    showGame();
-                }
+                if (targetId === 'game') showGame();
             };
 
             // --- News loader -------------------------------------------------
