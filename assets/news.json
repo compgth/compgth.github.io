@@ -1,35 +1,35 @@
 {
   "news": [
     {
-      "id": "news1",
-      "title": "Neue Veröffentlichung",
-      "date": "2025-10-20",
-      "image": "https://picsum.photos/seed/news1/800/400",
-      "summary": "Veröffentlichung eines Artikels zur Webkartographie mit interaktiven Karten.",
-      "link": "#"
-    },
-    {
-      "id": "news2",
-      "title": "Projektstart",
-      "date": "2025-09-05",
-      "image": "https://picsum.photos/seed/news2/800/400",
-      "summary": "Beginn eines Projekts zur Integration von Fernerkundungsdaten in Webanwendungen.",
-      "link": "#"
-    },
-    {
-      "id": "news3",
-      "title": "Seepferdchen-Schutzinitiative gestartet",
-      "date": "2025-08-10",
+      "id": "seahorse1",
+      "title": "Habitatkartierung für Seepferdchen mit Satellitendaten",
+      "date": "2025-10-01",
       "image": "https://picsum.photos/seed/seahorse1/800/400",
-      "summary": "Eine lokale Initiative startet Maßnahmen zum Schutz der Seepferdchen in Küstenlebensräumen und setzt auf Bürgerbeteiligung.",
+      "summary": "Ein neuer Workflow kombiniert Sentinel-2- und Luftbilddaten mit maschinellem Lernen, um Seegraswiesen zu kartieren — wichtige Lebensräume für Seepferdchen.",
       "link": "#"
     },
     {
-      "id": "news4",
-      "title": "Neue Studie zu Seepferdchen-Populationen",
-      "date": "2025-07-15",
+      "id": "seahorse2",
+      "title": "Citizen-Science-Portal: Seepferdchen-Beobachtungen als offene Geodaten",
+      "date": "2025-09-12",
       "image": "https://picsum.photos/seed/seahorse2/800/400",
-      "summary": "Wissenschaftler veröffentlichen eine Studie zur Entwicklung von Seepferdchen-Populationen und identifizieren wichtige Schutzgebiete.",
+      "summary": "Frei zugängliche Beobachtungsdaten werden über eine Webmapping-Plattform gesammelt und als GeoJSON zur Verfügung gestellt, um Schutzmaßnahmen zu unterstützen.",
+      "link": "#"
+    },
+    {
+      "id": "seahorse3",
+      "title": "Telemetrie-Analyse zeigt Wanderbewegungen von Seepferdchen",
+      "date": "2025-08-20",
+      "image": "https://picsum.photos/seed/seahorse3/800/400",
+      "summary": "Eine Telemetriestudie mit GPS-Tags und räumlichen Analysen identifiziert saisonale Wanderkorridore und potenzielle Schutzgebiete.",
+      "link": "#"
+    },
+    {
+      "id": "seahorse4",
+      "title": "Offene Geodaten für Seepferdchen‑Schutzgebiete",
+      "date": "2025-07-05",
+      "image": "https://picsum.photos/seed/seahorse4/800/400",
+      "summary": "Ein Konsortium veröffentlicht Vektor‑ und Rasterdaten zu Lebensräumen, Erfassungsstandorten und Schutzmaßnahmen unter einer offenen Lizenz.",
       "link": "#"
     }
   ]
