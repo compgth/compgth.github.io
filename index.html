@@ -230,13 +230,6 @@
             outline: none;
         }
         .contact-fab svg { width: 20px; height: 20px; display: block; fill: var(--accent); }
-
-        /* Game styles (Pong) */
-        .game-wrap { display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; }
-        #game-canvas { background: var(--card-bg); border: 1px solid var(--border); border-radius:8px; width: 100%; max-width: 640px; height: auto; display:block; }
-        .game-controls { display:flex; gap:0.5rem; align-items:center; flex-direction:column; }
-        .game-controls button { padding:0.4rem 0.6rem; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); cursor:pointer; }
-        .score { font-weight:600; color:var(--fg); }
     </style>
 </head>
 <body>
@@ -252,7 +245,6 @@
             <button role="tab" aria-selected="false" aria-pressed="false" data-target="stationen">Stationen</button>
             <button role="tab" aria-selected="false" aria-pressed="false" data-target="karten">Karten</button>
             <button role="tab" aria-selected="false" aria-pressed="false" data-target="news">News</button>
-            <button role="tab" aria-selected="false" aria-pressed="false" data-target="game">Spiel</button>
         </nav>
 
         <section id="about" class="tab-panel active" role="tabpanel" aria-hidden="false">
@@ -302,22 +294,6 @@
             <h2>News</h2>
             <div id="news-gallery" class="gallery" aria-live="polite">
                 <!-- News items will be loaded here from assets/news.json -->
-            </div>
-        </section>
-
-        <section id="game" class="tab-panel" role="tabpanel" aria-hidden="true">
-            <h2>Spiel: Pong</h2>
-            <div class="game-wrap">
-                <canvas id="game-canvas" width="600" height="400" aria-label="Pong Spiel" tabindex="0"></canvas>
-                <div class="game-controls" aria-hidden="false">
-                    <div class="score">Spielstand: <span id="game-score">0 : 0</span></div>
-                    <div>
-                        <button id="game-start" aria-label="Spiel starten">Start</button>
-                        <button id="game-pause" aria-label="Spiel pausieren">Pause</button>
-                        <button id="game-reset" aria-label="Spiel zurücksetzen">Reset</button>
-                    </div>
-                    <small style="color:var(--muted)">Steuerung: Spieler links: W / S oder Pfeile</small>
-                </div>
             </div>
         </section>
     </main>
@@ -489,124 +465,7 @@
             var initial = document.querySelector('.tabs button[aria-selected="true"]') || tabs[0];
             if (initial) setActiveTab(initial.dataset.target);
 
-            // --- Pong game -------------------------------------------------
-            var _gameCreated = false;
-            var _game = null;
-
-            function ensureGame() {
-                if (_gameCreated) return;
-                _gameCreated = true;
-
-                var canvas = document.getElementById('game-canvas');
-                var ctx = canvas.getContext('2d');
-                var scoreEl = document.getElementById('game-score');
-                var startBtn = document.getElementById('game-start');
-                var pauseBtn = document.getElementById('game-pause');
-                var resetBtn = document.getElementById('game-reset');
-
-                var w = canvas.width, h = canvas.height;
-                var paddleH = 80, paddleW = 10;
-                var left = { x: 10, y: (h - paddleH)/2 };
-                var right = { x: w - 10 - paddleW, y: (h - paddleH)/2 };
-                var ball = { x: w/2, y: h/2, vx: 4, vy: 3, r: 6 };
-                var keys = {};
-                var score = { left: 0, right: 0 };
-                var running = false;
-                var rafId = null;
-
-                function draw() {
-                    // background
-                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg') || '#fff';
-                    ctx.fillRect(0,0,w,h);
-                    // center line
-                    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border') || '#ddd';
-                    ctx.setLineDash([8,8]);
-                    ctx.beginPath(); ctx.moveTo(w/2,0); ctx.lineTo(w/2,h); ctx.stroke(); ctx.setLineDash([]);
-                    // paddles
-                    ctx.fillStyle = getComputedStyle(document.body).classList.contains('dark') ? '#58a6ff' : '#0057b8';
-                    ctx.fillRect(left.x, left.y, paddleW, paddleH);
-                    ctx.fillRect(right.x, right.y, paddleW, paddleH);
-                    // ball
-                    ctx.beginPath(); ctx.fillStyle = '#e44'; ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
-                }
-
-                function step() {
-                    // player input (left paddle)
-                    if (keys['ArrowUp'] || keys['w'] || keys['W']) left.y -= 6;
-                    if (keys['ArrowDown'] || keys['s'] || keys['S']) left.y += 6;
-                    left.y = Math.max(0, Math.min(h - paddleH, left.y));
-
-                    // simple AI for right paddle
-                    var target = ball.y - paddleH/2;
-                    right.y += (target - right.y) * 0.08;
-                    right.y = Math.max(0, Math.min(h - paddleH, right.y));
-
-                    // move ball
-                    ball.x += ball.vx; ball.y += ball.vy;
-                    // top/bottom
-                    if (ball.y - ball.r < 0 || ball.y + ball.r > h) ball.vy *= -1;
-
-                    // paddle collisions
-                    if (ball.x - ball.r < left.x + paddleW && ball.y > left.y && ball.y < left.y + paddleH) {
-                        ball.vx = Math.abs(ball.vx);
-                        // add some spin
-                        var diff = (ball.y - (left.y + paddleH/2)) / (paddleH/2);
-                        ball.vy = 4 * diff;
-                    }
-                    if (ball.x + ball.r > right.x && ball.y > right.y && ball.y < right.y + paddleH) {
-                        ball.vx = -Math.abs(ball.vx);
-                        var diff = (ball.y - (right.y + paddleH/2)) / (paddleH/2);
-                        ball.vy = 4 * diff;
-                    }
-
-                    // score
-                    if (ball.x < 0) { score.right += 1; resetBall(-1); }
-                    if (ball.x > w) { score.left += 1; resetBall(1); }
-
-                    draw();
-                    scoreEl.textContent = score.left + ' : ' + score.right;
-                }
-
-                function resetBall(dir) {
-                    ball.x = w/2; ball.y = h/2; ball.vx = 4 * (dir|| (Math.random() > 0.5 ? 1 : -1)); ball.vy = (Math.random()*4 - 2);
-                }
-
-                function loop() {
-                    step();
-                    rafId = requestAnimationFrame(loop);
-                }
-
-                function start() { if (running) return; running = true; rafId = requestAnimationFrame(loop); }
-                function pause() { if (!running) return; running = false; if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
-                function reset() { pause(); score.left = 0; score.right = 0; left.y = (h - paddleH)/2; right.y = (h - paddleH)/2; resetBall(); draw(); scoreEl.textContent = '0 : 0'; }
-
-                function onKeyDown(e) { keys[e.key] = true; if (e.key === ' ') { if (running) pause(); else start(); } }
-                function onKeyUp(e) { keys[e.key] = false; }
-
-                // attach events
-                startBtn.addEventListener('click', start);
-                pauseBtn.addEventListener('click', function(){ if (running) pause(); else start(); });
-                resetBtn.addEventListener('click', reset);
-                window.addEventListener('keydown', onKeyDown);
-                window.addEventListener('keyup', onKeyUp);
-
-                // init
-                resetBall(); draw();
-
-                _game = { start: start, pause: pause, reset: reset, isRunning: function(){ return running; } };
-            }
-
-            function showGame() {
-                ensureGame();
-                var c = document.getElementById('game-canvas'); if (c) c.focus();
-            }
-
-            // integrate with tab activation (override existing setActiveTab)
-            var originalSetActive = setActiveTab;
-            setActiveTab = function(targetId) {
-                originalSetActive(targetId);
-                if (targetId === 'game') showGame();
-            };
+            // Game tab removed — no game initialization here
 
             // --- News loader -------------------------------------------------
             function createNewsCard(item) {
