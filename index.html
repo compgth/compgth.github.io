@@ -230,6 +230,13 @@
             outline: none;
         }
         .contact-fab svg { width: 20px; height: 20px; display: block; fill: var(--accent); }
+
+        /* Snake game styles */
+        .game-wrap { display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; }
+        #snake-canvas { background: var(--card-bg); border: 1px solid var(--border); border-radius:8px; width: 100%; max-width: 480px; height: auto; display:block; }
+        .game-controls { display:flex; gap:0.5rem; align-items:center; flex-direction:column; }
+        .game-controls button { padding:0.4rem 0.6rem; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); cursor:pointer; }
+        .score { font-weight:600; color:var(--fg); }
     </style>
 </head>
 <body>
@@ -245,6 +252,7 @@
             <button role="tab" aria-selected="false" aria-pressed="false" data-target="stationen">Stationen</button>
             <button role="tab" aria-selected="false" aria-pressed="false" data-target="karten">Karten</button>
             <button role="tab" aria-selected="false" aria-pressed="false" data-target="news">News</button>
+            <button role="tab" aria-selected="false" aria-pressed="false" data-target="game">Spiel</button>
         </nav>
 
         <section id="about" class="tab-panel active" role="tabpanel" aria-hidden="false">
@@ -294,6 +302,22 @@
             <h2>News</h2>
             <div id="news-gallery" class="gallery" aria-live="polite">
                 <!-- News items will be loaded here from assets/news.json -->
+            </div>
+        </section>
+
+        <section id="game" class="tab-panel" role="tabpanel" aria-hidden="true">
+            <h2>Spiel: Snake</h2>
+            <div class="game-wrap">
+                <canvas id="snake-canvas" width="400" height="400" aria-label="Snake Spiel" tabindex="0"></canvas>
+                <div class="game-controls" aria-hidden="false">
+                    <div class="score">Punkte: <span id="snake-score">0</span></div>
+                    <div>
+                        <button id="snake-start" aria-label="Spiel starten">Start</button>
+                        <button id="snake-pause" aria-label="Spiel pausieren">Pause</button>
+                        <button id="snake-reset" aria-label="Spiel zurücksetzen">Reset</button>
+                    </div>
+                    <small style="color:var(--muted)">Steuerung: Pfeiltasten / W A S D</small>
+                </div>
             </div>
         </section>
     </main>
@@ -464,6 +488,148 @@
             // Ensure initial state (default tab is the first)
             var initial = document.querySelector('.tabs button[aria-selected="true"]') || tabs[0];
             if (initial) setActiveTab(initial.dataset.target);
+
+            // --- Snake game -------------------------------------------------
+            var _snakeCreated = false;
+            var _snake = null;
+
+            function ensureSnake() {
+                if (_snakeCreated) return;
+                _snakeCreated = true;
+
+                var canvas = document.getElementById('snake-canvas');
+                var ctx = canvas.getContext('2d');
+                var scoreEl = document.getElementById('snake-score');
+                var startBtn = document.getElementById('snake-start');
+                var pauseBtn = document.getElementById('snake-pause');
+                var resetBtn = document.getElementById('snake-reset');
+
+                var grid = 20; // cell size
+                var cols = Math.floor(canvas.width / grid);
+                var rows = Math.floor(canvas.height / grid);
+
+                var game = {
+                    snake: [{x: Math.floor(cols/2), y: Math.floor(rows/2)}],
+                    dir: {x:1,y:0},
+                    food: null,
+                    running: false,
+                    speed: 8, // frames per second
+                    tickId: null,
+                    score: 0
+                };
+
+                function placeFood() {
+                    var valid = false;
+                    while (!valid) {
+                        var fx = Math.floor(Math.random()*cols);
+                        var fy = Math.floor(Math.random()*rows);
+                        valid = !game.snake.some(function(s){ return s.x===fx && s.y===fy; });
+                        if (valid) game.food = {x:fx,y:fy};
+                    }
+                }
+
+                function draw() {
+                    ctx.clearRect(0,0,canvas.width,canvas.height);
+                    // background
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--card-bg') || '#f4f4f4';
+                    ctx.fillRect(0,0,canvas.width,canvas.height);
+                    // food
+                    if (game.food) {
+                        ctx.fillStyle = '#e44';
+                        ctx.fillRect(game.food.x*grid, game.food.y*grid, grid-1, grid-1);
+                    }
+                    // snake
+                    ctx.fillStyle = getComputedStyle(document.body).classList.contains('dark') ? '#58a6ff' : '#0057b8';
+                    game.snake.forEach(function(s, idx){
+                        ctx.fillRect(s.x*grid, s.y*grid, grid-1, grid-1);
+                    });
+                }
+
+                function step() {
+                    var head = { x: game.snake[0].x + game.dir.x, y: game.snake[0].y + game.dir.y };
+                    // wrap around
+                    head.x = (head.x + cols) % cols;
+                    head.y = (head.y + rows) % rows;
+                    // collision with self
+                    if (game.snake.some(function(s){ return s.x===head.x && s.y===head.y; })) {
+                        stop();
+                        return;
+                    }
+                    game.snake.unshift(head);
+                    // eat food
+                    if (game.food && head.x===game.food.x && head.y===game.food.y) {
+                        game.score += 1;
+                        scoreEl.textContent = game.score;
+                        placeFood();
+                    } else {
+                        game.snake.pop();
+                    }
+                    draw();
+                }
+
+                function start() {
+                    if (game.running) return;
+                    game.running = true;
+                    var interval = 1000 / game.speed;
+                    game.tickId = setInterval(step, interval);
+                }
+                function stop() {
+                    game.running = false;
+                    if (game.tickId) { clearInterval(game.tickId); game.tickId = null; }
+                }
+                function reset() {
+                    stop();
+                    game.snake = [{x: Math.floor(cols/2), y: Math.floor(rows/2)}];
+                    game.dir = {x:1,y:0};
+                    game.score = 0;
+                    scoreEl.textContent = '0';
+                    placeFood();
+                    draw();
+                }
+
+                function setDir(dx,dy) {
+                    // prevent reverse
+                    if (game.snake.length>1 && game.dir.x === -dx && game.dir.y === -dy) return;
+                    game.dir.x = dx; game.dir.y = dy;
+                }
+
+                // keyboard
+                function onKey(e) {
+                    var key = e.key;
+                    if (key === 'ArrowUp' || key === 'w' || key === 'W') setDir(0,-1);
+                    if (key === 'ArrowDown' || key === 's' || key === 'S') setDir(0,1);
+                    if (key === 'ArrowLeft' || key === 'a' || key === 'A') setDir(-1,0);
+                    if (key === 'ArrowRight' || key === 'd' || key === 'D') setDir(1,0);
+                    if (key === ' ' ) { if (game.running) stop(); else start(); }
+                }
+
+                // attach events
+                startBtn.addEventListener('click', start);
+                pauseBtn.addEventListener('click', function(){ if (game.running) stop(); else start(); });
+                resetBtn.addEventListener('click', reset);
+                window.addEventListener('keydown', onKey);
+
+                // init
+                placeFood(); draw();
+
+                _snake = { start: start, pause: stop, reset: reset, isRunning: function(){ return game.running; } };
+            }
+
+            function showGame() {
+                ensureSnake();
+                // focus canvas for keyboard input
+                var c = document.getElementById('snake-canvas'); if (c) c.focus();
+            }
+
+            // integrate with tab activation
+            var originalSetActive = setActiveTab;
+            setActiveTab = function(targetId) {
+                // call original behaviour
+                originalSetActive(targetId);
+                if (targetId === 'game') {
+                    showGame();
+                }
+            };
 
             // --- News loader -------------------------------------------------
             function createNewsCard(item) {
