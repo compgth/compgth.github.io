@@ -430,7 +430,7 @@
 
 
                 // add the remaining three maps as separate iframes
-                ['map_1_basiskarte.html', 'map_2_punkte.html', 'map_3_reiseroute.html', 'map_4_flaechen_online.html'].forEach(function(src, idx) {
+                ['map_1_basiskarte.html', 'map_2_punkte.html', 'map_3_reiseroute.html', 'map_4_flaechen_online.html','kepler.gl.html'].forEach(function(src, idx) {
                     var f = document.createElement('iframe');
                     f.src = src;
                     f.setAttribute('aria-label', 'Karte ' + (idx + 2));
