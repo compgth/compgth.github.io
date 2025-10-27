@@ -1,4 +1,109 @@
 <!DOCTYPE html>
+<!-- Cesium lazy-loader + auto-init for the "karten" panel.
+    Hinweis: Ersetze TILESET_URL mit dem konkreten 3D‑Tileset‑URL / Service von basemap.de (prüfe Lizenz/Attribution). -->
+<script>
+(function(){
+  // Beispiel-URL (bitte durch offiziellen basemap.de-tileset.json ersetzen)
+  var TILESET_URL = 'https://3d.basemap.de/tiles/tileset.json';
+
+  window._cesiumLoading = false;
+  window._cesiumInitDone = false;
+
+  window._loadCesium = function(cb){
+    if(window.Cesium){ cb && cb(); return; }
+    if(window._cesiumLoading){
+     var t = setInterval(function(){ if(window.Cesium){ clearInterval(t); cb && cb(); } }, 50);
+     return;
+    }
+    window._cesiumLoading = true;
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://cdn.jsdelivr.net/npm/cesium@1.110/Build/Cesium/Cesium.css';
+    document.head.appendChild(css);
+
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/cesium@1.110/Build/Cesium/Cesium.js';
+    s.onload = function(){ window._cesiumLoading = false; cb && cb(); };
+    s.onerror = function(){ window._cesiumLoading = false; console.error('Cesium load failed'); cb && cb(new Error('Cesium load failed')); };
+    document.head.appendChild(s);
+  };
+
+  function initCesium(containerId){
+    if(window._cesiumInitDone) return;
+    window._loadCesium(function(err){
+     if(err) return;
+     // create viewer
+     var viewer = new Cesium.Viewer(containerId, {
+       terrainProvider: Cesium.createWorldTerrain(),
+       baseLayerPicker: true,
+       timeline: false,
+       animation: false,
+       geocoder: false,
+       navigationHelpButton: false
+     });
+
+     // add 3D-Tiles (Deutschland 3D-Gebäude)
+     try {
+       var tileset = new Cesium.Cesium3DTileset({ url: TILESET_URL });
+       viewer.scene.primitives.add(tileset);
+       viewer.zoomTo(tileset).otherwise(function(){ viewer.scene.requestRender(); });
+     } catch (e) {
+       console.error('Fehler beim Hinzufügen des Tilesets', e);
+     }
+
+     // optional: reagieren auf Theme-Änderungen (background)
+     window.addEventListener('themeChange', function(e){
+       var dark = e.detail === 'dark';
+       viewer.scene.backgroundColor = Cesium.Color.fromCssColorString(dark ? '#0f1720' : '#e6eef6');
+     });
+
+     window._cesiumViewer = viewer;
+     window._cesiumInitDone = true;
+    });
+  }
+
+  // beobachte das #karten-Panel; erzeugen des Containers und Initialisierung beim ersten Aktivieren
+  document.addEventListener('DOMContentLoaded', function(){
+    var panel = document.getElementById('karten');
+    if(!panel) return;
+
+    function ensureCesiumCreated(){
+     if(panel.querySelector('#cesiumContainer')) return;
+     // create wrapper and container
+     var wrap = document.createElement('div');
+     wrap.style.marginTop = '0.75rem';
+     var c = document.createElement('div');
+     c.id = 'cesiumContainer';
+     c.style.width = '100%';
+     c.style.height = '640px';
+     c.style.minHeight = '420px';
+     c.style.border = '1px solid var(--border)';
+     c.style.borderRadius = '8px';
+     c.style.overflow = 'hidden';
+     wrap.appendChild(c);
+     // insert above existing content
+     panel.insertBefore(wrap, panel.firstChild);
+     initCesium('cesiumContainer');
+    }
+
+    // create immediately if panel already active
+    if(panel.classList.contains('active') || panel.getAttribute('aria-hidden') === 'false'){
+     ensureCesiumCreated();
+    }
+
+    var obs = new MutationObserver(function(){
+     if(panel.classList.contains('active') || panel.getAttribute('aria-hidden') === 'false'){
+       ensureCesiumCreated();
+       // if viewer exists, resize/rerender
+       if(window._cesiumViewer && window._cesiumViewer.scene) {
+        try { window._cesiumViewer.scene.requestRender(); } catch(e){}
+       }
+     }
+    });
+    obs.observe(panel, { attributes: true, attributeFilter: ['class','aria-hidden'] });
+  });
+})();
+</script>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
