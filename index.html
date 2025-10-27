@@ -434,20 +434,6 @@
                 // No Leaflet maps are created when using an iframe
                 maps = [];
             }
-                // add appropriate tile layer based on current theme
-                var currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
-                maps.forEach(function(map, idx) {
-                    var url = (currentTheme === 'dark') ? darkTiles : lightTiles;
-                    var attr = (currentTheme === 'dark') ? darkAttribution : lightAttribution;
-                    var layer = L.tileLayer(url, { attribution: attr });
-                    layer.addTo(map);
-                    tileLayers[idx] = layer;
-                });
-                // Ensure proper sizing after render
-                setTimeout(function() {
-                    maps.forEach(function(m) { m.invalidateSize(); });
-                }, 100);
-            }
 
             // Replace tile layers when theme changes
             function updateMapTiles(theme) {
