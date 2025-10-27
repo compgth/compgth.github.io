@@ -415,13 +415,25 @@
             }
 
             function createMaps() {
-                var center = [38.89511, -77.03637]; // Washington DC
-                var zoom = 12;
-                maps = [
-                    L.map('map1').setView(center, zoom),
-                    L.map('map2').setView(center, zoom),
-                    L.map('map3').setView(center, zoom)
-                ];
+                // Replace the three leaflet map containers with a single iframe loading the static map page.
+                var flexContainer = document.getElementById('map1').parentElement; // the wrapper div containing map1/map2/map3
+                // remove existing children (map1, map2, map3)
+                while (flexContainer.firstChild) flexContainer.removeChild(flexContainer.firstChild);
+
+                var iframe = document.createElement('iframe');
+                iframe.src = 'map_1_basiskarte.html';
+                iframe.setAttribute('aria-label', 'Karte');
+                iframe.style.width = '100%';
+                iframe.style.minHeight = '420px';
+                iframe.style.height = '100%';
+                iframe.style.border = '0';
+                iframe.loading = 'lazy';
+
+                flexContainer.appendChild(iframe);
+
+                // No Leaflet maps are created when using an iframe
+                maps = [];
+            }
                 // add appropriate tile layer based on current theme
                 var currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
                 maps.forEach(function(map, idx) {
