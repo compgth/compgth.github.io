@@ -422,7 +422,25 @@
 
                 var iframe = document.createElement('iframe');
                 iframe.src = 'map_1_basiskarte.html';
-                iframe.setAttribute('aria-label', 'Karte');
+                iframe.setAttribute('aria-label', 'Karte 1 — Basiskarte');
+                // ensure the first iframe behaves like the original map boxes
+                iframe.style.flex = '1 1 0';
+                iframe.style.minWidth = '220px';
+
+                // add the remaining three maps as separate iframes
+                ['map_2_punkte.html', 'map_3_reiseroute.html', 'map_4_flaechen_online.html'].forEach(function(src, idx) {
+                    var f = document.createElement('iframe');
+                    f.src = src;
+                    f.setAttribute('aria-label', 'Karte ' + (idx + 2));
+                    f.style.flex = '1 1 0';
+                    f.style.minWidth = '220px';
+                    f.style.width = '100%';
+                    f.style.minHeight = '420px';
+                    f.style.height = '100%';
+                    f.style.border = '0';
+                    f.loading = 'lazy';
+                    flexContainer.appendChild(f);
+                });
                 iframe.style.width = '100%';
                 iframe.style.minHeight = '420px';
                 iframe.style.height = '100%';
